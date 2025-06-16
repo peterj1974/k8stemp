@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  selector:
+    matchLabels:
+      app: <%=instance.name%>-nginx
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: <%=instance.name%>-nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: html
+          mountPath: /usr/share/nginx/html
+      volumes:
+      - name: html
+        configMap:
+          name: web-server-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+  labels:
+    app: <%=instance.name%>-nginx
+spec:
+  type: NodePort
+  ports:
+  - port: 8080
+    targetPort: 80
+    nodePort: 30080
+    protocol: TCP
+  selector:
+    app: <%=instance.name%>-nginx
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: web-server-config
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Simple Web Server</title>
+    </head>
+    <body>
+      <h1>Hello, World!</h1>
+      <p>This is a simple web server running in Kubernetes.</p>
+    </body>
+    </html>
